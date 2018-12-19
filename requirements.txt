@@ -1,0 +1,4 @@
+django==1.11.16
+requests
+jinja2
+mysqlclient

@@ -1,0 +1,81 @@
+//
+// named.conf
+//
+// Provided by Red Hat bind package to configure the ISC BIND named(8) DNS
+// server as a caching only nameserver (as a localhost DNS resolver only).
+//
+// See /usr/share/doc/bind*/sample/ for example named configuration files.
+//
+
+options {
+    listen-on port 53 { 0.0.0.0/0; };
+    version "[keruyun-private-nameserver]";
+    directory       "/var/named";
+    dump-file       "/var/named/data/cache_dump.db";
+    statistics-file "/var/named/data/named_stats.txt";
+    memstatistics-file "/var/named/data/named_mem_stats.txt";
+    recursion yes;
+    allow-recursion   { any; };
+    allow-query { any; };
+    allow-query-cache { any; };
+    forwarders {
+        100.125.135.29;
+        100.125.17.29;
+    };
+    max-cache-ttl 86400;
+    max-cache-size 2097152 ;
+
+    dnssec-enable no;
+    dnssec-validation no;
+
+    /* Path to ISC DLV key */
+    bindkeys-file "/etc/named.iscdlv.key";
+
+    managed-keys-directory "/var/named/dynamic";
+};
+
+
+logging {
+    channel default_debug {
+    file "data/named.run";
+    severity dynamic;
+    };
+};
+
+include "/etc/named.root.key";
+// Ip List of China
+include "{{ acl_config_file }}";
+
+{%- for a_view in view_config_list %}
+view "{{ a_view['name'] }}" {
+    match-clients { {% for key_name in a_view["denied_keys"] %}!key {{ key_name }}; {% endfor %}key {{ a_view['allowed_key'] }}; "{{ a_view['acl_name'] }}"; };
+
+    {%- for a_zone in a_view['zones'] %}
+    zone "{{ a_zone['name'] }}" {
+        type master;
+        file "{{ a_zone['file_path'] }}";
+    };
+    {%- endfor %}
+
+};
+{%- endfor %}
+
+# Use with the following in named.conf, adjusting the allow list as needed:
+key "rndc-key" {
+    algorithm hmac-md5;
+    secret "nI3QXIo7W3sgVTskxrdDgw==";
+};
+
+controls {
+    inet 127.0.0.1 port 953
+    allow { 127.0.0.1; } keys { "rndc-key"; };
+};
+
+{%- for key_name,key_value in key_list %}
+key "{{ key_name }}" {
+    algorithm hmac-md5;
+    secret "{{ key_value }}";
+};
+{%- endfor %}
+
+# End of named.conf

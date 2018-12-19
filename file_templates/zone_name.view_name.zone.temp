@@ -1,0 +1,21 @@
+$ORIGIN .
+$TTL 3600       ; 1 hour
+{{ zone_name }} IN SOA  {{ zone_name }}. root.{{ zone_name }}. (
+                                1        ; serial
+                                10800      ; refresh (3 hours)
+                                900        ; retry (15 minutes)
+                                604800     ; expire (1 week)
+                                86400      ; minimum (1 day)
+                                )
+$TTL 86400      ; 1 day
+{%- for ns_server in NS_SERVERS %}
+                        NS      {{ ns_server }}.
+{%- endfor %}
+{%- for t_group in ttl_groups %}
+$ORIGIN {{ zone_name }}.
+$TTL {{ t_group["ttl_set"] }}
+{%- for record in t_group["resolv_records"] %}
+{{ record["resolv_name"] }}    {{ record["record_type"] }}   {{ record["resolv_addr"] }}
+{%- endfor %}
+{%- endfor %}
+

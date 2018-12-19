@@ -1,0 +1,9 @@
+// This file is auto generated. Please do not Edit it!
+{%- for acl_name in acl_dict %}
+acl "{{ acl_name }}" {
+{%- for subnet in acl_dict[acl_name] %}
+   {{ subnet }};
+{%- endfor %}
+};
+
+{%- endfor %}
