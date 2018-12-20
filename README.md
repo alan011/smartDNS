@@ -26,3 +26,65 @@ smartDNS要求在每个集群的主节点（master）上起一个数据库服务
 
 通过这种方式，实现了DNS集群的夸机房管理、数据同步等，也实现了数据备份与多活。
 
+### 安装python3.6
+依赖python3.6以上的环境，请安装python3.6+的版本。
+
+### 安装mysql
+smartDNS的数据都存在数据库，一般，在smartDNS的主控节点上安装mysql-server即可。
+```
+~$ yum install mysql-server
+~$ chkconfig mysqld on
+~$ service mysqld start 
+~$ mysqladmin -uroot password '<设置root密码>'      #设置初始密码。
+```
+注意修改mysql配置文件，默认字符集设置为utf8，不然中文显示会乱：
+```
+~$ echo "
+[mysqld]
+datadir=/var/lib/mysql
+socket=/var/lib/mysql/mysql.sock
+user=mysql
+symbolic-links=0
+init-connect='SET NAMES utf8'
+character-set-server = utf8
+[client]
+default-character-set=utf8
+[mysql]
+default-character-set=utf8
+[mysqld_safe]
+log-error=/var/log/mysqld.log
+pid-file=/var/run/mysqld/mysqld.pid
+"   >  /etc/my.cnf
+~$ service mysqld restart 
+```
+创建smartDNS需要的库
+```
+~$ mysql -uroot -p -e 'create database dns_db;'    #创建smartDNS使用的数据库 
+```
+注意，要在mysql中为其他slave节点创建数据库访问权限。
+
+### 安装smartDNS
+创建依赖目录：
+```
+~$ mkdir -p /var/django_projects/dns
+```
+从github获取代码后，解压到`/var/django_projects/dns`目录，然后将工程目录改成，`smartDNS`。
+然后，安装依赖包：
+```
+~$ cd /var/django_projects/dns/smartDNS/
+~$ pip3 install -r requirements.txt
+```
+修改数据库配置：
+```
+~$ vim config/django_settings.py   ### 酌情修改即可。从节点的数据库主机要指到mysql所在的机器上去（一般在主节点上）。
+```
+修改集群配置：
+```
+~$ vim config/config.py 
+```
+配置说明：
+
+1、"cluster config"段：对于主节点，THIS_IS_MASTER设置为True， 从节点设置为False。主节点MASTER_SERVER是一个IP字符串；从节点可以有多台，故，是一个IP列表。
+2、“Multi-cluster config”段：若不启用multi_master功能，请将ENABLE_MULTI_CLUSTERS设只为False，忽略其他有关配置项即可。若启用的话，请设置为True，并按照配置文件中的注解仔细配置multi_muster有关的配置项。
+3、"Basic config"段：都是关于bind本身的一些配置，一般不用改。
+4、“choices for models”段：是一些关于key啊，环境的配置，根据实际情况修改即可。DNS key的制作（也就是那个字符串），请使用dnssec-keygen工具做即可。
