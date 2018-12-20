@@ -95,3 +95,54 @@ pid-file=/var/run/mysqld/mysqld.pid
 3、"Basic config"段：都是关于bind本身的一些配置，一般不用改。
 
 4、“choices for models”段：是一些关于key啊，环境的配置，根据实际情况修改即可。DNS key的制作（也就是那个字符串），请使用dnssec-keygen工具做即可。
+
+### 启动服务
+
+首先初始化数据库：
+```
+~$ cd /var/django_projects/dns/smartDNS/dns_project
+~$ python3 manage.py migrate      
+```
+
+启动服务：
+```
+~$ python3 manage.py runserver 0.0.0.0:10081     
+```
+
+注意：
+
+1、 服务起的端口要跟config.py里的端口保持一致，不然集群通知的接口调不通，数据无法同步。
+
+2、从节点也许安装smartDNS代码，起接口服务，主从节点服务起的端口要保持一致。
+
+3、数据库初始化仅在主节点做一次即可，从节点不用。从节点对数据库只有读操作。
+
+# smartDNS操作方法
+
+### 通过脚本工具来操作
+
+/var/django_projects/dns/smartDNS/tools/目录下，有一些用shell写的脚本工具，其中常用的四个工具介绍如下：
+
+ns_iplist.sh: 管理DNS acl的工具，apply后自动生成/etc/named/iplist.cfg文件。
+
+ns_view.sh: 管理DNS view的工具，apply后自动生成/etc/named.conf主配置文件。
+
+ns_zone.sh: 管理DNS zone的工具，仅做数据库修改，不会生成文件，没有apply功能。
+
+ns_resolv.sh: 管理DNS解析记录的工具，apply后依照数据库的全部数据，生成/var/named/named.zone/<view_dir>/*等数据文件。
+
+
+具体增删改查的方法，请查看脚本的使用帮助。
+
+此外，ns_apply.sh脚本，用于启用WEB UI后，将ns_apply.sh 脚本放入crontab中，自动apply来自WEB的数据修改:
+```
+~$ sudo crontab -e 
+* * * * * sh /var/django_projects/dns/smartDNS/tools/ns_apply.sh ALL   
+```
+以上配置表示，每分钟apply一次，故，在web ui上做的修改，会在1分钟内生效。
+
+注意，只需要在主节点上配置即可，从节点不用配置。apply的操作，会触发集群中的主从数据同步逻辑。
+
+### 通过WEB UI来管理
+
+之前为单位定制开发过一套web ui，这里不便开放出来，近期我会用vue.js专门开发一套开源的web ui出来。
