@@ -1,5 +1,6 @@
 # smartDNS设计介绍
-smartDNS是一套用django开发的API，将配置数据存在数据库，然后用jinja2语言来渲染模板，自动生成bind的配置文件，自动reload named服务。
+
+smartDNS是一套在bind的基础上用django开发的API，将配置数据存在数据库，然后用jinja2语言来渲染模板，自动生成bind的配置文件，自动reload named服务。
 
 这样便可基于这套API做web界面，或者跟其他运维系统做对接，自动添加DNS解析。
 
