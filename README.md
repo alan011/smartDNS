@@ -89,6 +89,9 @@ pid-file=/var/run/mysqld/mysqld.pid
 配置说明：
 
 1、"cluster config"段：对于主节点，THIS_IS_MASTER设置为True， 从节点设置为False。主节点MASTER_SERVER是一个IP字符串；从节点可以有多台，故，是一个IP列表。
+
 2、“Multi-cluster config”段：若不启用multi_master功能，请将ENABLE_MULTI_CLUSTERS设只为False，忽略其他有关配置项即可。若启用的话，请设置为True，并按照配置文件中的注解仔细配置multi_muster有关的配置项。
+
 3、"Basic config"段：都是关于bind本身的一些配置，一般不用改。
+
 4、“choices for models”段：是一些关于key啊，环境的配置，根据实际情况修改即可。DNS key的制作（也就是那个字符串），请使用dnssec-keygen工具做即可。
